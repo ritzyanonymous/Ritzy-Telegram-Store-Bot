@@ -1,0 +1,30 @@
+name: Auto Unzip ZIP Files
+
+on:
+  push:
+    # Trigger when any ZIP file is added or updated
+    paths:
+      - '**.zip'
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and unzip all ZIP files
+        run: |
+          for file in $(find . -name "*.zip"); do
+            echo "Unzipping $file..."
+            unzip -o "$file" -d "${file%.*}"
+          done
+
+      - name: Commit and push unzipped contents
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-unzipped ZIP archive(s)"
+          git push
